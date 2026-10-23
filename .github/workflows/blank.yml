@@ -27,8 +27,8 @@ jobs:
     - name: Gerar Host de Conexao Externa
       shell: powershell
       run: |
-        # Comando corrigido sem caracteres invalidos
-        $ip_publico = (Invoke-RestMethod -Uri "https://ipify.org")
+        # Força o retorno em texto puro para nao vir codigos HTML
+        $ip_publico = (Invoke-RestMethod -Uri "https://ipify.org").Trim()
         $usuario = $env:USERNAME
         $computador = [System.Net.Dns]::GetHostName()
         
