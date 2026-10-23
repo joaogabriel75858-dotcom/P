@@ -27,7 +27,8 @@ jobs:
     - name: Gerar Host de Conexao Externa
       shell: powershell
       run: |
-        $ip_publico = (Resolve-DnsName -Name ://opendns.com -Server 208.67.222.222).IPAddress
+        # Comando corrigido sem caracteres invalidos
+        $ip_publico = (Invoke-RestMethod -Uri "https://ipify.org")
         $usuario = $env:USERNAME
         $computador = [System.Net.Dns]::GetHostName()
         
@@ -47,7 +48,6 @@ jobs:
         PC Name: $computador
         "@ | Out-File -FilePath dados_conexao.txt
 
-    # AQUI ESTAVA O ERRO - AGORA CORRIGIDO PARA UPLOAD-ARTIFACT
     - name: Salvar Dados de Acesso
       uses: actions/upload-artifact@v4
       with:
