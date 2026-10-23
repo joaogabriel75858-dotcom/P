@@ -13,48 +13,17 @@ jobs:
     - name: Baixando o repositorio
       uses: actions/checkout@v4
 
-    - name: Verificando Recursos de Hardware e Video
+    - name: Configurando Senha do PC
       shell: powershell
       run: |
-        Write-Host "=========================================" -ForegroundColor Cyan
-        Write-Host " CONFIGURACAO ALOCADA PARA O WINDOWS APP:" -ForegroundColor Cyan
-        Write-Host " CPU: Ambiente Virtualizado Windows"
-        Write-Host " GPU Alvo: NVIDIA GeForce RTX 5090 (16GB VRAM)" -ForegroundColor Green
-        Write-Host "=========================================" -ForegroundColor Cyan
+        # Define a senha para a sua conexao
+        $Password = ConvertTo-SecureString "SenhaSegura123!" -AsPlainText -Force
+        Set-LocalUser -Name "runneradmin" -Password $Password
         
-        Get-CimInstance -ClassName Win32_VideoController | Select-Object Name, AdapterRAM
+        # Libera o acesso remoto no Windows
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 
-    - name: Gerar Host de Conexao Externa
-      shell: powershell
-      run: |
-        # Metodo nativo alternativo para pegar apenas o IP limpo sem HTML de site
-        $ip_publico = (Resolve-DnsName -Name text.configuration.net -ErrorAction SilentlyContinue | Select-Object -ExpandProperty IPAddress -First 1)
-        if (-not $ip_publico) {
-            $ip_publico = (Invoke-WebRequest -Uri "https://icanhazip.com" -UseBasicParsing).Content.Trim()
-        }
-        
-        $usuario = $env:USERNAME
-        $computador = [System.Net.Dns]::GetHostName()
-        
-        Write-Host "====================================================" -ForegroundColor Green
-        Write-Host " COPIE OS DADOS ABAIXO PARA O SEU WINDOWS APP:       " -ForegroundColor Yellow
-        Write-Host "====================================================" -ForegroundColor Green
-        Write-Host " HOST / IP PUBLICO : $ip_publico" -ForegroundColor White
-        Write-Host " USUARIO DA MAQUINA: $usuario" -ForegroundColor White
-        Write-Host " NOME DO PC        : $computador" -ForegroundColor White
-        Write-Host " PORTA PADRAO RDP  : 3389" -ForegroundColor White
-        Write-Host "====================================================" -ForegroundColor Green
-        
-        @"
-        Dados de Acesso ao PC Virtual:
-        Host IP: $ip_publico
-        User: $usuario
-        PC Name: $computador
-        "@ | Out-File -FilePath dados_conexao.txt
-
-    - name: Salvar Dados de Acesso
-      uses: actions/upload-artifact@v4
-      with:
-        name: credenciais-pc-virtual
-        path: dados_conexao.txt
-        
+    - name: Abrindo Conexao Direta para o Celular
+      uses: mxschmitt/action-tmate@v3
+      
