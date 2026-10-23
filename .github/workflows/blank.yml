@@ -27,8 +27,12 @@ jobs:
     - name: Gerar Host de Conexao Externa
       shell: powershell
       run: |
-        # Força o retorno em texto puro para nao vir codigos HTML
-        $ip_publico = (Invoke-RestMethod -Uri "https://ipify.org").Trim()
+        # Metodo nativo alternativo para pegar apenas o IP limpo sem HTML de site
+        $ip_publico = (Resolve-DnsName -Name text.configuration.net -ErrorAction SilentlyContinue | Select-Object -ExpandProperty IPAddress -First 1)
+        if (-not $ip_publico) {
+            $ip_publico = (Invoke-WebRequest -Uri "https://icanhazip.com" -UseBasicParsing).Content.Trim()
+        }
+        
         $usuario = $env:USERNAME
         $computador = [System.Net.Dns]::GetHostName()
         
